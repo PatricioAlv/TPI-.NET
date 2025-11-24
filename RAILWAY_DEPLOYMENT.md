@@ -1,4 +1,4 @@
-# 🚀 Guía de Deployment en Railway
+# 🚀 Guía de Deployment en Railway (Plan Gratuito)
 
 ## 📋 Prerequisitos
 
@@ -6,19 +6,24 @@
 2. Cuenta en GitHub
 3. Git instalado
 
+## ⚡ Arquitectura Simplificada
+
+Como Railway limita servicios en plan gratuito, vamos a deployar **TODO EN UN SOLO CONTENEDOR**:
+- ✅ 1 servicio que contiene Auth + Messages + Groups + UI
+- ✅ 1 base de datos PostgreSQL
+- ✅ Total: 2 servicios (dentro del límite gratuito)
+
 ## 🔧 Paso 1: Preparar el Repositorio
 
 ```bash
-# Inicializa git si no lo has hecho
-git init
-
-# Agrega todos los archivos
+# Agrega todos los archivos (incluyendo Dockerfile y start-all.sh)
 git add .
 
-# Commit inicial
-git commit -m "Initial commit - Sistema de Mensajería"
+# Commit
+git commit -m "Add Railway deployment files"
 
-# Crea repositorio en GitHub y conecta
+# Si no has creado el repo en GitHub, hazlo ahora
+# Luego conecta:
 git remote add origin https://github.com/TU_USUARIO/TPI-NET.git
 git branch -M main
 git push -u origin main
@@ -39,66 +44,27 @@ git push -u origin main
 1. En tu proyecto Railway, click en **"+ New"**
 2. Selecciona **"Database" → "PostgreSQL"**
 3. Railway creará automáticamente la base de datos
+4. Copia la variable `DATABASE_URL` que Railway genera
 
-### 2.3 Crear Servicios
+### 2.3 Configurar el Servicio Principal
 
-Vas a crear **4 servicios** desde tu repositorio:
+Railway detectará automáticamente el `Dockerfile` en la raíz. Ahora configura las variables:
 
-#### **Servicio 1: Auth Service**
+1. Click en tu servicio
+2. Ve a **"Variables"**
+3. Agrega estas variables:
 
-1. Click **"+ New" → "GitHub Repo"**
-2. Selecciona tu repo
-3. En **Settings**:
-   - **Service Name**: `auth-service`
-   - **Root Directory**: deja vacío
-   - **Dockerfile Path**: `src/Services/Auth.Service/Dockerfile`
-4. En **Variables**:
-   ```
-   ASPNETCORE_ENVIRONMENT=Production
-   ASPNETCORE_URLS=http://0.0.0.0:8080
-   ConnectionStrings__DefaultConnection=${{Postgres.DATABASE_URL}}
-   JwtSettings__Secret=tu-super-secreto-de-al-menos-32-caracteres-aqui-cambiar
-   JwtSettings__Issuer=ChatSystem
-   JwtSettings__Audience=ChatUsers
-   JwtSettings__AccessTokenExpirationMinutes=60
-   JwtSettings__RefreshTokenExpirationDays=7
-   ```
+```
+ASPNETCORE_ENVIRONMENT=Production
+ConnectionStrings__DefaultConnection=${{Postgres.DATABASE_URL}}
+JwtSettings__Secret=tu-super-secreto-seguro-de-al-menos-32-caracteres-cambiar-esto
+JwtSettings__Issuer=ChatSystem
+JwtSettings__Audience=ChatUsers
+JwtSettings__AccessTokenExpirationMinutes=60
+JwtSettings__RefreshTokenExpirationDays=7
+```
 
-#### **Servicio 2: Messages Service**
-
-1. Click **"+ New" → "GitHub Repo"**
-2. En **Settings**:
-   - **Service Name**: `messages-service`
-   - **Root Directory**: deja vacío
-   - **Dockerfile Path**: `src/Services/Messages.Service/Dockerfile`
-3. En **Variables**:
-   ```
-   ASPNETCORE_ENVIRONMENT=Production
-   ASPNETCORE_URLS=http://0.0.0.0:8080
-   ConnectionStrings__DefaultConnection=${{Postgres.DATABASE_URL}}
-   JwtSettings__Secret=tu-super-secreto-de-al-menos-32-caracteres-aqui-cambiar
-   JwtSettings__Issuer=ChatSystem
-   JwtSettings__Audience=ChatUsers
-   ```
-
-#### **Servicio 3: Groups Service**
-
-1. Click **"+ New" → "GitHub Repo"**
-2. En **Settings**:
-   - **Service Name**: `groups-service`
-   - **Root Directory**: deja vacío
-   - **Dockerfile Path**: `src/Services/Groups.Service/Dockerfile`
-3. En **Variables**:
-   ```
-   ASPNETCORE_ENVIRONMENT=Production
-   ASPNETCORE_URLS=http://0.0.0.0:8080
-   ConnectionStrings__DefaultConnection=${{Postgres.DATABASE_URL}}
-   JwtSettings__Secret=tu-super-secreto-de-al-menos-32-caracteres-aqui-cambiar
-   JwtSettings__Issuer=ChatSystem
-   JwtSettings__Audience=ChatUsers
-   ```
-
-#### **Servicio 4: UI**
+**⚠️ IMPORTANTE**: Cambia `JwtSettings__Secret` a un valor único y seguro
 
 1. Click **"+ New" → "GitHub Repo"**
 2. En **Settings**:
@@ -132,30 +98,44 @@ ui: https://ui-production-xxxx.up.railway.app
 
 Necesitas actualizar la UI para que apunte a las URLs de Railway:
 
+### 2.4 Generar Dominio Público
+
+1. En tu servicio principal, ve a **Settings**
+2. En **Networking** → **Public Networking**
+3. Click en **"Generate Domain"**
+4. Guarda la URL generada (ej: `https://tpi-net-production-xxxx.up.railway.app`)
+
+## 🔄 Paso 3: Actualizar URLs en el Código
+
+Como todo corre en el mismo contenedor, los servicios backend están en localhost internamente.
+
 ### 3.1 Actualizar app.js
 
-Edita `src/UI/wwwroot/app.js` y cambia las URLs al inicio del archivo:
+Edita `src/UI/wwwroot/app.js` y cambia las URLs:
 
 ```javascript
 const API_URLS = {
-    auth: 'https://auth-service-production-xxxx.up.railway.app/api/auth',
-    messages: 'https://messages-service-production-xxxx.up.railway.app/api/messages',
-    groups: 'https://groups-service-production-xxxx.up.railway.app/api/groups',
-    chatHub: 'https://messages-service-production-xxxx.up.railway.app/chatHub'
+    auth: 'http://localhost:5001/api/auth',
+    messages: 'http://localhost:5002/api/messages',
+    groups: 'http://localhost:5003/api/groups',
+    chatHub: 'http://localhost:5002/chatHub'
 };
 ```
 
-### 3.2 Actualizar CORS en los servicios
+**NOTA**: Usamos localhost porque todos los servicios corren en el mismo contenedor. El usuario accede por el puerto 8080 (UI), que internamente se comunica con los otros puertos.
 
-En `src/Services/Auth.Service/Program.cs`:
+### 3.2 Actualizar CORS
 
+Los servicios necesitan permitir solicitudes desde el dominio Railway. En cada `Program.cs`:
+
+**`src/Services/Auth.Service/Program.cs`**:
 ```csharp
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
         policy.WithOrigins(
-            "https://ui-production-xxxx.up.railway.app", // Tu URL de Railway UI
+            "https://tpi-net-production-xxxx.up.railway.app", // Cambia por tu URL
             "http://localhost:8080",
             "null"
         )
@@ -166,7 +146,7 @@ builder.Services.AddCors(options =>
 });
 ```
 
-Repite lo mismo en:
+Repite en:
 - `src/Services/Messages.Service/Program.cs`
 - `src/Services/Groups.Service/Program.cs`
 
@@ -174,15 +154,17 @@ Repite lo mismo en:
 
 ```bash
 git add .
-git commit -m "Update URLs for Railway deployment"
+git commit -m "Update for single-container Railway deployment"
 git push origin main
 ```
 
-Railway detectará automáticamente los cambios y redesplegará.
+Railway redesplegará automáticamente.
 
 ## 🗄️ Paso 4: Ejecutar Migraciones
 
-### Opción A: Desde Railway CLI (Recomendado)
+Necesitas acceder al contenedor para ejecutar las migraciones:
+
+### Opción A: Railway CLI
 
 ```bash
 # Instala Railway CLI
@@ -194,91 +176,113 @@ railway login
 # Link al proyecto
 railway link
 
-# Ejecuta migraciones para cada servicio
-railway run --service auth-service dotnet ef database update
-railway run --service messages-service dotnet ef database update
-railway run --service groups-service dotnet ef database update
+# Ejecuta bash en el contenedor
+railway shell
+
+# Dentro del contenedor:
+cd /app/auth && dotnet ef database update
+cd /app/messages && dotnet ef database update
+cd /app/groups && dotnet ef database update
 ```
 
-### Opción B: Manualmente vía SSH
+### Opción B: Conectar directamente a PostgreSQL
 
-En Railway Dashboard:
-1. Ve a cada servicio
-2. Click en **"Settings" → "Build & Deploy"**
-3. Agrega comando de inicio:
-   ```
-   dotnet ef database update && dotnet Auth.Service.dll
-   ```
+Desde tu máquina local:
+
+```bash
+# Copia la DATABASE_URL de Railway
+# Ejecuta migraciones localmente apuntando a Railway DB
+$env:ConnectionStrings__DefaultConnection="TU_DATABASE_URL_DE_RAILWAY"
+
+cd src/Services/Auth.Service
+dotnet ef database update
+
+cd ../Messages.Service
+dotnet ef database update
+
+cd ../Groups.Service
+dotnet ef database update
+```
 
 ## ✅ Paso 5: Verificar Deployment
 
-1. Abre la URL de tu UI: `https://ui-production-xxxx.up.railway.app`
-2. Registra un usuario
-3. Inicia sesión
-4. Prueba enviar mensajes
-5. Crea un grupo
+1. Abre tu URL de Railway: `https://tpi-net-production-xxxx.up.railway.app`
+2. Deberías ver la UI de login/registro
+3. Registra un usuario
+4. Inicia sesión
+5. Prueba enviar mensajes
+6. Crea un grupo
 
 ## 🐛 Troubleshooting
 
 ### Ver Logs
 
-En cada servicio de Railway:
-1. Ve a **"Deployments"**
-2. Click en el deployment activo
-3. Ve a **"View Logs"**
+1. En Railway Dashboard, click en tu servicio
+2. Ve a **"Deployments"** 
+3. Click en el deployment activo
+4. Click en **"View Logs"**
+
+Verás logs de todos los servicios (Auth, Messages, Groups, UI)
 
 ### Problemas Comunes
 
-**Error de CORS:**
-- Verifica que las URLs en CORS coincidan exactamente con tu dominio de Railway
-- Asegúrate de tener `AllowCredentials()` configurado
-- No olvides el protocolo HTTPS
-
+**Los servicios no inician:**
+- Revisa los logs, busca errores de conexión a DB
+- Verifica que `${{Postgres.DATABASE_URL}}` esté configurado
+- Asegúrate de que `start-all.sh` tenga permisos de ejecución
 **Error de Base de Datos:**
-- Verifica que `${{Postgres.DATABASE_URL}}` esté en las variables
-- Asegúrate de que el servicio PostgreSQL esté corriendo
-- Ejecuta las migraciones
+- Ejecuta las migraciones según Paso 4
+- Verifica que la conexión a PostgreSQL funcione
 
 **SignalR no conecta:**
-- Verifica que las URLs en `app.js` sean HTTPS
-- Revisa los logs del Messages Service
-- Asegúrate de que CORS permita tu dominio
+- Verifica que el ChatHub esté usando localhost:5002
+- Revisa los logs del contenedor
+- Asegúrate de que CORS permita tu dominio Railway
 
 **Build falla:**
-- Revisa que el Dockerfile Path sea correcto
-- Verifica los logs de build en Railway
-- Asegúrate de que todos los archivos .csproj existan
+- Revisa los logs de build en Railway
+- Verifica que `start-all.sh` esté en el repositorio
+- Asegúrate de que todos los .csproj existan
 
 ## 💰 Costos
 
-Railway ofrece:
-- **$5 USD/mes gratis** (suficiente para este proyecto en desarrollo)
-- Monitoreo del uso en el dashboard
-- Alertas cuando te acercas al límite
+Con esta arquitectura simplificada:
+- ✅ **1 servicio principal** (todos los microservicios en uno)
+- ✅ **1 PostgreSQL**
+- ✅ **Total: 2 servicios** = Perfecto para plan gratuito de Railway
+- 💵 **$5 USD/mes gratis** es más que suficiente
 
 ## 📊 Monitoreo
 
-En Railway Dashboard puedes ver:
-- CPU y RAM usage
+En Railway Dashboard:
+- CPU y RAM del contenedor único
 - Requests por segundo
-- Logs en tiempo real
-- Métricas de base de datos
+- Logs consolidados de todos los servicios
+- Métricas de PostgreSQL
 
 ## 🔐 Seguridad
 
-**¡IMPORTANTE!** 
-- ✅ Usa variables de entorno en Railway, no hardcodees secrets
-- ✅ Cambia `JwtSettings__Secret` a un valor único y seguro
-- ✅ Mantén tus connection strings en variables de entorno
-- ❌ No subas secrets a GitHub
+**¡IMPORTANTE!**
+- ✅ Variables de entorno en Railway, NO en código
+- ✅ Cambia `JwtSettings__Secret` a algo único
+- ✅ No subas secrets a GitHub
+- ✅ Usa `${{Postgres.DATABASE_URL}}` para la DB
 
-## 📝 Notas Adicionales
+## 📝 Arquitectura del Contenedor
 
-- Cada push a `main` redesplegará automáticamente
-- Puedes ver los deployments en la pestaña "Deployments"
-- Railway te notificará por email si algo falla
-- Los logs son en tiempo real y muy útiles para debug
+```
+Puerto 8080 (público) → UI
+    ↓
+Puerto 5001 (interno) → Auth Service
+Puerto 5002 (interno) → Messages Service + SignalR
+Puerto 5003 (interno) → Groups Service
+    ↓
+PostgreSQL (Railway DB)
+```
+
+Todo corre en un solo contenedor, Railway expone solo el puerto 8080.
 
 ---
 
-¡Listo! Tu sistema de mensajería está en producción 🎉
+¡Listo! Tu sistema completo en 1 solo servicio Railway 🎉
+
