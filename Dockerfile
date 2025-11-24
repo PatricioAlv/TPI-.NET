@@ -44,8 +44,13 @@ COPY --from=build /app/messages ./messages
 COPY --from=build /app/groups ./groups
 COPY --from=build /app/ui ./ui
 
-# Copiar script de inicio
-COPY start-all.sh .
-RUN chmod +x start-all.sh
+# Crear script de inicio directamente
+RUN echo '#!/bin/sh' > start.sh && \
+    echo 'cd /app/auth && dotnet Auth.Service.dll --urls "http://0.0.0.0:5001" &' >> start.sh && \
+    echo 'cd /app/messages && dotnet Messages.Service.dll --urls "http://0.0.0.0:5002" &' >> start.sh && \
+    echo 'cd /app/groups && dotnet Groups.Service.dll --urls "http://0.0.0.0:5003" &' >> start.sh && \
+    echo 'sleep 5' >> start.sh && \
+    echo 'cd /app/ui && exec dotnet UI.dll --urls "http://0.0.0.0:8080"' >> start.sh && \
+    chmod +x start.sh
 
-ENTRYPOINT ["./start-all.sh"]
+ENTRYPOINT ["/bin/sh", "/app/start.sh"]
