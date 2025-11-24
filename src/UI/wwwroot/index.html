@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Mensajería - TPI .NET</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Pantalla de Login/Registro -->
+    <div id="auth-screen" class="screen active">
+        <div class="auth-container">
+            <h1>💬 Sistema de Mensajería</h1>
+            <div class="auth-tabs">
+                <button class="tab-btn active" onclick="showTab('login')">Iniciar Sesión</button>
+                <button class="tab-btn" onclick="showTab('register')">Registrarse</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form" class="auth-form active">
+                <h2>Iniciar Sesión</h2>
+                <input type="text" id="login-username" placeholder="Usuario" required>
+                <input type="password" id="login-password" placeholder="Contraseña" required>
+                <button onclick="login()">Entrar</button>
+                <div id="login-error" class="error-message"></div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="auth-form">
+                <h2>Registrarse</h2>
+                <input type="text" id="register-username" placeholder="Usuario" required>
+                <input type="email" id="register-email" placeholder="Email" required>
+                <input type="text" id="register-displayname" placeholder="Nombre para mostrar">
+                <input type="password" id="register-password" placeholder="Contraseña (min 8 caracteres)" required>
+                <button onclick="register()">Crear Cuenta</button>
+                <div id="register-error" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Chat -->
+    <div id="chat-screen" class="screen">
+        <div class="chat-layout">
+            <!-- Sidebar con lista de usuarios -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="current-user">
+                        <div class="user-avatar current">U</div>
+                        <div class="user-details">
+                            <div id="current-user-name" class="user-name"></div>
+                            <div class="user-status">En línea</div>
+                        </div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()" title="Cerrar sesión">🚪</button>
+                </div>
+
+                <div class="sidebar-content">
+                    <div class="sidebar-tabs">
+                        <button class="tab-sidebar active" onclick="showSidebarTab('chats')">Chats</button>
+                        <button class="tab-sidebar" onclick="showSidebarTab('groups')">Grupos</button>
+                    </div>
+                    
+                    <!-- Lista de Chats -->
+                    <div id="chats-tab" class="tab-content active">
+                        <div class="users-header">
+                            <h3>Conversaciones</h3>
+                            <button class="new-btn" onclick="showNewChatModal()" title="Nueva conversación">➕</button>
+                        </div>
+                        <ul id="user-list" class="user-list"></ul>
+                    </div>
+                    
+                    <!-- Lista de Grupos -->
+                    <div id="groups-tab" class="tab-content">
+                        <div class="users-header">
+                            <h3>Grupos</h3>
+                            <button class="new-btn" onclick="showNewGroupModal()" title="Nuevo grupo">➕</button>
+                        </div>
+                        <ul id="group-list" class="user-list"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área de chat -->
+            <div class="chat-main">
+                <div id="no-chat-selected" class="no-chat-message">
+                    <div class="empty-state">
+                        <h2>💬</h2>
+                        <p>Selecciona un usuario para iniciar una conversación</p>
+                    </div>
+                </div>
+
+                <div id="chat-active" class="chat-active" style="display: none;">
+                    <!-- Header del chat -->
+                    <div class="chat-header">
+                        <div class="chat-user-info">
+                            <div class="user-avatar">U</div>
+                            <div class="user-details">
+                                <div id="chat-header-name" class="user-name"></div>
+                                <div id="typing-indicator" class="typing-indicator" style="display: none;">
+                                    escribiendo...
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-header-actions">
+                            <button id="delete-group-btn" class="delete-group-btn" onclick="deleteCurrentGroup()" style="display: none;" title="Eliminar grupo">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mensajes -->
+                    <div id="messages-container" class="messages-container"></div>
+
+                    <!-- Input de mensaje -->
+                    <div class="message-input-container">
+                        <input 
+                            type="text" 
+                            id="message-input" 
+                            placeholder="Escribe un mensaje..." 
+                            oninput="onTyping()"
+                        >
+                        <button onclick="sendMessage()" class="send-btn">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para nueva conversación -->
+    <div id="new-chat-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nueva Conversación</h3>
+                <button class="close-btn" onclick="closeModal('new-chat-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Selecciona un usuario para iniciar una conversación:</p>
+                <ul id="available-users-list" class="available-users-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para nuevo grupo -->
+    <div id="new-group-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Crear Grupo</h3>
+                <button class="close-btn" onclick="closeModal('new-group-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="group-name" placeholder="Nombre del grupo" class="modal-input">
+                <textarea id="group-description" placeholder="Descripción (opcional)" class="modal-textarea"></textarea>
+                <h4>Agregar miembros:</h4>
+                <div id="group-members-list" class="members-list"></div>
+                <button onclick="createGroup()" class="modal-btn">Crear Grupo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
