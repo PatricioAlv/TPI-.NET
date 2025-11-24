@@ -1,0 +1,114 @@
+services:
+  # Auth Service
+  - type: web
+    name: tpi-auth-service
+    runtime: docker
+    dockerfilePath: ./src/Services/Auth.Service/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: tpi-auth-db
+          property: connectionString
+      - key: JWT__Secret
+        generateValue: true
+      - key: JWT__Issuer
+        value: tpi-auth-service
+      - key: JWT__Audience
+        value: tpi-messaging-app
+      - key: JWT__AccessTokenExpirationMinutes
+        value: 60
+      - key: JWT__RefreshTokenExpirationDays
+        value: 7
+      - key: CORS__AllowedOrigins
+        value: https://tpi-ui.onrender.com
+    healthCheckPath: /health
+
+  # Messages Service
+  - type: web
+    name: tpi-messages-service
+    runtime: docker
+    dockerfilePath: ./src/Services/Messages.Service/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: tpi-messages-db
+          property: connectionString
+      - key: JWT__Secret
+        sync: false
+      - key: JWT__Issuer
+        value: tpi-auth-service
+      - key: JWT__Audience
+        value: tpi-messaging-app
+      - key: CORS__AllowedOrigins
+        value: https://tpi-ui.onrender.com
+    healthCheckPath: /health
+
+  # Groups Service
+  - type: web
+    name: tpi-groups-service
+    runtime: docker
+    dockerfilePath: ./src/Services/Groups.Service/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: tpi-groups-db
+          property: connectionString
+      - key: JWT__Secret
+        sync: false
+      - key: JWT__Issuer
+        value: tpi-auth-service
+      - key: JWT__Audience
+        value: tpi-messaging-app
+      - key: CORS__AllowedOrigins
+        value: https://tpi-ui.onrender.com
+    healthCheckPath: /health
+
+  # UI Service
+  - type: web
+    name: tpi-ui
+    runtime: docker
+    dockerfilePath: ./src/UI/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: API__AuthServiceUrl
+        value: https://tpi-auth-service.onrender.com
+      - key: API__MessagesServiceUrl
+        value: https://tpi-messages-service.onrender.com
+      - key: API__GroupsServiceUrl
+        value: https://tpi-groups-service.onrender.com
+    healthCheckPath: /
+
+databases:
+  - name: tpi-auth-db
+    databaseName: auth_db
+    user: auth_user
+    plan: free
+
+  - name: tpi-messages-db
+    databaseName: messages_db
+    user: messages_user
+    plan: free
+
+  - name: tpi-groups-db
+    databaseName: groups_db
+    user: groups_user
+    plan: free

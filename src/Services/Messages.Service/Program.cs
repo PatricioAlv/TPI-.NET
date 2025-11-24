@@ -105,6 +105,16 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// Aplicar migraciones automáticamente en producción
+if (app.Environment.IsProduction())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<MessagesDbContext>();
+        db.Database.Migrate();
+    }
+}
+
 // Middleware
 if (app.Environment.IsDevelopment())
 {
@@ -118,5 +128,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
+
+// Health check
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "messages" }));
 
 app.Run();

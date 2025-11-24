@@ -87,6 +87,16 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// Aplicar migraciones automáticamente en producción
+if (app.Environment.IsProduction())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+        db.Database.Migrate();
+    }
+}
+
 // Middleware
 if (app.Environment.IsDevelopment())
 {
@@ -98,5 +108,8 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Health check
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "auth" }));
 
 app.Run();

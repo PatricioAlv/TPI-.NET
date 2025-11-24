@@ -1,11 +1,45 @@
+# Archivos de Git
+.git
+.gitignore
+.gitattributes
+
+# Documentación
+*.md
+LICENSE
+RAILWAY_DEPLOYMENT.md
+RENDER_DEPLOYMENT.md
+
+# Archivos de desarrollo
+.vs
+.vscode
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build outputs
 **/bin/
 **/obj/
-**/.vs/
-**/.vscode/
-**/node_modules/
-**/.git/
-**/.gitignore
-**/*.md
-**/appsettings.Development.json
-**/.dockerignore
-**/Dockerfile
+**/out/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (si hay)
+node_modules/
+npm-debug.log

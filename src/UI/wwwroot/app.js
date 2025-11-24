@@ -1,5 +1,5 @@
-// Configuración de URLs de los servicios
-const API_URLS = {
+// Configuración de URLs de los servicios (ahora cargado desde config.js)
+const API_URLS = window.API_CONFIG || {
     auth: 'http://localhost:5001/api/auth',
     messages: 'http://localhost:5002/api/messages',
     groups: 'http://localhost:5003/api/groups',
