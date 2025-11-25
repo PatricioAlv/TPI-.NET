@@ -10,6 +10,10 @@ builder.Services.AddCors(options =>
                 "http://127.0.0.1:5500",
                 "http://localhost:8080",
                 "https://tpi-messaging-frontend-isriwh72n-patricios-projects-3063c8f8.vercel.app",
+                "https://tpi-messaging-frontend-fetasdbzg-patricios-projects-3063c8f8.vercel.app",
+                "https://tpi-messaging-frontend-pq31dgayj-patricios-projects-3063c8f8.vercel.app",
+                "https://tpi-messaging-frontend-gqzktpkfh-patricios-projects-3063c8f8.vercel.app",
+                "https://tpi-messaging-frontend-cb4fykw0t-patricios-projects-3063c8f8.vercel.app",
                 "https://uncranked-linelike-bryanna.ngrok-free.dev"
               )
               .AllowAnyHeader()

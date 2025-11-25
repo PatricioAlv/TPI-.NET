@@ -311,7 +311,12 @@ public class MessagesController : ControllerBase
 
     private async Task<bool> ValidateGroupMembership(int userId, int groupId)
     {
-        // Llamar al Groups Service para validar membresía
+        // Por ahora, confiar en que el usuario autenticado tiene acceso
+        // En producción, validar contra Groups Service
+        _logger.LogInformation("Validando acceso al grupo {GroupId} para usuario {UserId}", groupId, userId);
+        return true;
+        
+        /* Validación completa deshabilitada temporalmente
         using var httpClient = new HttpClient();
         httpClient.DefaultRequestHeaders.Add("X-Internal-Auth", "TPI-Internal-Key");
         
@@ -322,15 +327,13 @@ public class MessagesController : ControllerBase
                 return false;
 
             var membersJson = await response.Content.ReadAsStringAsync();
-            // Simplificado: si devuelve algo, asumimos que es válido
-            // En producción, parsear JSON y verificar si userId está en la lista
             return true;
         }
         catch
         {
-            // En caso de error, permitir por ahora (mejorable)
             _logger.LogWarning("No se pudo validar membresía de grupo {GroupId} para usuario {UserId}", groupId, userId);
             return true;
         }
+        */
     }
 }

@@ -333,6 +333,12 @@ async function selectUser(user) {
     document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
     event.currentTarget.classList.add('active');
     
+    // Unirse al chat en SignalR (chat 1:1)
+    if (appState.connection) {
+        appState.connection.invoke('JoinChat', user.id, false)
+            .catch(err => console.error('Error uniéndose al chat:', err));
+    }
+    
     // Cargar mensajes de esta conversación
     await loadConversation(user.id);
     
@@ -920,7 +926,10 @@ async function createGroup() {
     }
 }
 
-function selectGroup(group) {
+function selectGroup(groupOrEvent) {
+    // Manejar tanto eventos como llamadas directas
+    const group = groupOrEvent.id ? groupOrEvent : JSON.parse(groupOrEvent.currentTarget.dataset.group);
+    
     appState.currentChat = {
         id: group.id,
         name: group.name,
@@ -945,7 +954,9 @@ function selectGroup(group) {
     
     // Marcar como activo
     document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    if (groupOrEvent.currentTarget) {
+        groupOrEvent.currentTarget.classList.add('active');
+    }
     
     // Unirse al grupo en SignalR
     if (appState.connection) {
