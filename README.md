@@ -1,7 +1,18 @@
-# Sistema de Mensajería en Tiempo Real - TPI Programación IV
+# 💬 Sistema de Mensajería en Tiempo Real - TPI Programación IV
 
-## 📋 Descripción
 Sistema de mensajería en tiempo real similar a WhatsApp/Telegram, implementado con arquitectura de microservicios en .NET 9.
+
+---
+
+## 🚀 Despliegue Rápido
+
+**¿Necesitas deployar para tu TPI de facultad?**
+
+👉 **Lee [`QUICK_START_HYBRID.md`](QUICK_START_HYBRID.md)** - Despliegue 100% gratis (Backend en tu PC + Frontend en Vercel)
+
+📖 Otras opciones: [`DEPLOYMENT_OPTIONS.md`](DEPLOYMENT_OPTIONS.md)
+
+---
 
 ## 🏗️ Arquitectura de Microservicios
 
@@ -121,9 +132,25 @@ TPI-.NET/
 - PostgreSQL 14+
 - Node.js (para el cliente SignalR en UI)
 
-## 🏃 Ejecución
+## 🏃 Ejecución Local
 
-### 1. Configurar Base de Datos
+### Opción 1: Script Automático (Recomendado)
+
+```powershell
+# Inicia todos los servicios automáticamente
+.\start-local-backend.ps1
+```
+
+Esto abrirá 3 ventanas de PowerShell con:
+- Auth Service (puerto 5001)
+- Messages Service (puerto 5002)  
+- Groups Service (puerto 5003)
+
+### Opción 2: Manual
+
+### Opción 2: Manual
+
+#### 1. Configurar Base de Datos
 
 ```bash
 # Crear bases de datos en PostgreSQL
@@ -132,11 +159,11 @@ createdb messages_db
 createdb groups_db
 ```
 
-### 2. Configurar Connection Strings
+#### 2. Configurar Connection Strings
 
 Actualizar `appsettings.json` en cada servicio con la cadena de conexión correspondiente.
 
-### 3. Ejecutar Migraciones
+#### 3. Ejecutar Migraciones
 
 ```bash
 # En cada servicio
@@ -150,7 +177,9 @@ cd ../Groups.Service
 dotnet ef database update
 ```
 
-### 4. Ejecutar Servicios
+#### 4. Ejecutar Servicios
+
+#### 4. Ejecutar Servicios
 
 ```bash
 # Terminal 1 - Auth Service (puerto 5001)
@@ -166,9 +195,13 @@ cd src/Services/Groups.Service
 dotnet run
 ```
 
-### 5. Abrir UI
+#### 5. Abrir UI
 
-Abrir `src/UI/wwwroot/index.html` en el navegador o servir con un servidor HTTP local.
+```bash
+cd src/UI
+dotnet run
+# Abre http://localhost:8080
+```
 
 ## 📚 API Endpoints
 
@@ -208,10 +241,22 @@ Abrir `src/UI/wwwroot/index.html` en el navegador o servir con un servidor HTTP 
 - `UserOffline` - Usuario desconectado
 
 ## 👥 Autor
-mApache
-Trabajo Integrador - Programación IV
+
+Patricio Alvarez (mApache)  
+Trabajo Integrador - Programación IV  
 TUP - UTN 2025
 
 ## 📄 Licencia
 
-Proyecto académico de mApache - UTN
+Proyecto académico - UTN
+
+---
+
+## 📚 Documentación Adicional
+
+- **[DEPLOYMENT_OPTIONS.md](DEPLOYMENT_OPTIONS.md)** - Opciones de despliegue
+- **[QUICK_START_HYBRID.md](QUICK_START_HYBRID.md)** - Despliegue híbrido (gratis)
+- **[HYBRID_DEPLOYMENT.md](HYBRID_DEPLOYMENT.md)** - Detalles técnicos del despliegue híbrido
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Arquitectura detallada del sistema
+- **[docs/API_REFERENCE.md](docs/API_REFERENCE.md)** - Referencia completa de APIs
+- **[docs/EVALUACION.md](docs/EVALUACION.md)** - Cumplimiento de requisitos del TPI
