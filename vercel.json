@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "name": "tpi-messaging-frontend",
+  "builds": [
+    {
+      "src": "src/UI-static/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/src/UI-static/$1"
+    }
+  ]
+}
