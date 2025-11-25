@@ -6,6 +6,13 @@ const API_URLS = window.API_CONFIG || {
     chatHub: 'http://localhost:5002/hubs/chat'
 };
 
+// Helper para fetch con header de ngrok
+function fetchWithNgrok(url, options = {}) {
+    options.headers = options.headers || {};
+    options.headers['ngrok-skip-browser-warning'] = 'true';
+    return fetch(url, options);
+}
+
 // Estado global de la aplicación
 let appState = {
     user: null,
@@ -98,7 +105,7 @@ async function register() {
     }
 
     try {
-        const response = await fetch(`${API_URLS.auth}/register`, {
+        const response = await fetchWithNgrok(`${API_URLS.auth}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, email, password, displayName })
@@ -130,7 +137,7 @@ async function login() {
     }
 
     try {
-        const response = await fetch(`${API_URLS.auth}/login`, {
+        const response = await fetchWithNgrok(`${API_URLS.auth}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -163,7 +170,7 @@ function handleAuthSuccess(data) {
 
 async function syncCurrentUser() {
     try {
-        await fetch(`${API_URLS.messages}/sync-user`, {
+        await fetchWithNgrok(`${API_URLS.messages}/sync-user`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -188,7 +195,7 @@ async function logout() {
     }
     
     try {
-        await fetch(`${API_URLS.auth}/logout`, {
+        await fetchWithNgrok(`${API_URLS.auth}/logout`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -223,7 +230,7 @@ async function logout() {
 
 async function loadUsers() {
     try {
-        const response = await fetch(`${API_URLS.auth}/users`, {
+        const response = await fetchWithNgrok(`${API_URLS.auth}/users`, {
             headers: { 'Authorization': `Bearer ${appState.accessToken}` }
         });
         
@@ -243,7 +250,7 @@ async function loadUsers() {
 async function syncUsers(users) {
     try {
         for (const user of users) {
-            await fetch(`${API_URLS.messages}/sync-user`, {
+            await fetchWithNgrok(`${API_URLS.messages}/sync-user`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -342,7 +349,7 @@ async function loadConversation(userId) {
     
     // Luego cargar del servidor
     try {
-        const response = await fetch(`${API_URLS.messages}/chat/${userId}?pageNumber=1&pageSize=50`, {
+        const response = await fetchWithNgrok(`${API_URLS.messages}/chat/${userId}?pageNumber=1&pageSize=50`, {
             headers: { 'Authorization': `Bearer ${appState.accessToken}` }
         });
         
@@ -813,7 +820,7 @@ function selectUserById(userId) {
 
 async function loadGroups() {
     try {
-        const response = await fetch(`${API_URLS.groups}`, {
+        const response = await fetchWithNgrok(`${API_URLS.groups}`, {
             headers: { 'Authorization': `Bearer ${appState.accessToken}` }
         });
         
@@ -875,7 +882,7 @@ async function createGroup() {
     });
     
     try {
-        const response = await fetch(`${API_URLS.groups}`, {
+        const response = await fetchWithNgrok(`${API_URLS.groups}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -956,7 +963,7 @@ async function syncGroupMembers(group) {
     
     try {
         for (const member of group.members) {
-            await fetch(`${API_URLS.messages}/sync-user`, {
+            await fetchWithNgrok(`${API_URLS.messages}/sync-user`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -979,7 +986,7 @@ async function syncGroupMembers(group) {
 
 async function loadGroupMessages(groupId) {
     try {
-        const response = await fetch(`${API_URLS.messages}/group/${groupId}?pageNumber=1&pageSize=50`, {
+        const response = await fetchWithNgrok(`${API_URLS.messages}/group/${groupId}?pageNumber=1&pageSize=50`, {
             headers: { 'Authorization': `Bearer ${appState.accessToken}` }
         });
         
@@ -1009,7 +1016,7 @@ async function deleteCurrentGroup() {
     if (!confirmed) return;
     
     try {
-        const response = await fetch(`${API_URLS.groups}/${appState.currentChat.id}`, {
+        const response = await fetchWithNgrok(`${API_URLS.groups}/${appState.currentChat.id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${appState.accessToken}`
@@ -1038,3 +1045,4 @@ async function deleteCurrentGroup() {
         alert('Error al eliminar el grupo');
     }
 }
+

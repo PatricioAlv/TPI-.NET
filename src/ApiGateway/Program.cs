@@ -4,9 +4,17 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://127.0.0.1:5500",
+                "http://localhost:8080",
+                "https://tpi-messaging-frontend-isriwh72n-patricios-projects-3063c8f8.vercel.app",
+                "https://uncranked-linelike-bryanna.ngrok-free.dev"
+              )
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -21,6 +29,13 @@ builder.Services.AddReverseProxy()
                 Match = new Yarp.ReverseProxy.Configuration.RouteMatch
                 {
                     Path = "/api/auth/{**catch-all}"
+                },
+                Transforms = new List<IReadOnlyDictionary<string, string>>
+                {
+                    new Dictionary<string, string>
+                    {
+                        { "PathPattern", "/api/auth/{**catch-all}" }
+                    }
                 }
             },
             new Yarp.ReverseProxy.Configuration.RouteConfig
@@ -30,6 +45,13 @@ builder.Services.AddReverseProxy()
                 Match = new Yarp.ReverseProxy.Configuration.RouteMatch
                 {
                     Path = "/api/messages/{**catch-all}"
+                },
+                Transforms = new List<IReadOnlyDictionary<string, string>>
+                {
+                    new Dictionary<string, string>
+                    {
+                        { "PathPattern", "/api/messages/{**catch-all}" }
+                    }
                 }
             },
             new Yarp.ReverseProxy.Configuration.RouteConfig
@@ -39,6 +61,13 @@ builder.Services.AddReverseProxy()
                 Match = new Yarp.ReverseProxy.Configuration.RouteMatch
                 {
                     Path = "/api/groups/{**catch-all}"
+                },
+                Transforms = new List<IReadOnlyDictionary<string, string>>
+                {
+                    new Dictionary<string, string>
+                    {
+                        { "PathPattern", "/api/groups/{**catch-all}" }
+                    }
                 }
             },
             new Yarp.ReverseProxy.Configuration.RouteConfig
@@ -48,6 +77,13 @@ builder.Services.AddReverseProxy()
                 Match = new Yarp.ReverseProxy.Configuration.RouteMatch
                 {
                     Path = "/hubs/{**catch-all}"
+                },
+                Transforms = new List<IReadOnlyDictionary<string, string>>
+                {
+                    new Dictionary<string, string>
+                    {
+                        { "PathPattern", "/hubs/{**catch-all}" }
+                    }
                 }
             }
         },
