@@ -65,3 +65,4 @@ ngrok.yml
 # Vercel
 .vercel/
 
+.vercel
